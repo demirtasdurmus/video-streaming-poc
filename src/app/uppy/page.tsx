@@ -17,7 +17,7 @@ const html = `<html>
       Tus,
       DragDrop,
       ProgressBar,
-    } from 'https://releases.transloadit.com/uppy/v3.0.1/uppy.min.mjs';
+    } from 'https://releases.transloadit.com/uppy/v3.24.0/uppy.min.mjs';
 
     const uppy = new Uppy({ debug: true, autoProceed: true });
 
@@ -36,7 +36,13 @@ const html = `<html>
       .use(DragDrop, { target: '#drag-drop-area' })
       .use(Tus, { endpoint: '/api/cloudflare', chunkSize: 150 * 1024 * 1024 })
       .use(ProgressBar, { target: '.for-ProgressBar', hideAfterFinish: false })
-      .on('upload-success', onUploadSuccess('.uploaded-files ol'));
+      .on('upload-success', onUploadSuccess('.uploaded-files ol'))
+      .on('upload-error', (error) => {
+        console.log('Upload error:', error)
+      })
+      .on('complete', (result) => {
+        console.log('Upload result:', result)
+      })
 
     const uploadBtn = document.querySelector('button.upload-button');
     uploadBtn.addEventListener('click', () => uppy.upload());
@@ -45,9 +51,5 @@ const html = `<html>
 </html>`;
 
 export default function Uppy() {
-  return (
-    <iframe srcDoc={html} className="w-full h-screen">
-      Uppy
-    </iframe>
-  );
+  return <iframe srcDoc={html} className="w-full h-screen" />;
 }

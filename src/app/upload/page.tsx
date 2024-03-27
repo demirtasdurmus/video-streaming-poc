@@ -11,6 +11,7 @@ const UploadDemo: React.FC = () => {
   const endpointInputRef = useRef<HTMLInputElement>(null);
   const chunkSizeInputRef = useRef<HTMLInputElement>(null);
   const parallelUploadsInputRef = useRef<HTMLInputElement>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const getExpiryDate = () => {
     let theDate = new Date();
@@ -24,9 +25,11 @@ const UploadDemo: React.FC = () => {
       if (!file) return;
 
       const endpoint = endpointInputRef.current?.value || "/api/cloudflare";
+
       const chunkSize = chunkSizeInputRef.current
         ? parseInt(chunkSizeInputRef.current?.value || "", 10) || Infinity
         : 50 * 1024 * 1024;
+
       const parallelUploads =
         parseInt(parallelUploadsInputRef.current?.value || "", 10) || 1;
 
@@ -41,10 +44,10 @@ const UploadDemo: React.FC = () => {
           expiry: getExpiryDate(),
           filename: file.name,
           filetype: file.type,
+          requiresignedurls: "true",
         },
         onError: (error) => {
-          console.log("This is the famous error", JSON.stringify(error));
-          alert(`Failed because: ${error}`);
+          setErrorMessage(error.message);
           reset();
         },
         onProgress: (bytesUploaded, bytesTotal) => {
@@ -70,6 +73,9 @@ const UploadDemo: React.FC = () => {
             resolve();
           });
         },
+        // onUploadUrlAvailable: function () {
+        //   console.log("Upload url is available");
+        // },
       };
 
       const newUpload = new tus.Upload(file, options);
@@ -106,7 +112,19 @@ const UploadDemo: React.FC = () => {
         tus-js-client demo - File Upload
       </h1>
 
-      <p>
+      {errorMessage && (
+        <div className="w-full bg-red-400 rounded-lg p-4 text-white relative">
+          {errorMessage}
+          <span
+            className="text-black top-2 right-2 absolute font-bold text-2xl cursor-pointer"
+            onClick={() => setErrorMessage(null)}
+          >
+            X
+          </span>
+        </div>
+      )}
+
+      {/* <p>
         This demo shows the basic functionality of the tus protocol. You can
         select a file using the controls below and start/pause the upload as you
         wish.
@@ -121,7 +139,7 @@ const UploadDemo: React.FC = () => {
           tus.io
         </a>{" "}
         website. This demo is just here to aid developers.
-      </p>
+      </p> */}
 
       {/* <div
         className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4"
