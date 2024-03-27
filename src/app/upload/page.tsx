@@ -12,34 +12,38 @@ const UploadDemo: React.FC = () => {
   const chunkSizeInputRef = useRef<HTMLInputElement>(null);
   const parallelUploadsInputRef = useRef<HTMLInputElement>(null);
 
+  const getExpiryDate = () => {
+    let theDate = new Date();
+    theDate.setHours(theDate.getHours() + 5);
+    return theDate.toISOString();
+  };
+
   const startUpload = () => {
     if (fileInputRef.current && fileInputRef.current.files) {
       const file = fileInputRef.current.files[0];
       if (!file) return;
 
-      const endpoint = endpointInputRef.current?.value || "";
-      const chunkSize =
-        parseInt(chunkSizeInputRef.current?.value || "", 10) || Infinity;
+      const endpoint = endpointInputRef.current?.value || "/api/cloudflare";
+      const chunkSize = chunkSizeInputRef.current
+        ? parseInt(chunkSizeInputRef.current?.value || "", 10) || Infinity
+        : 50 * 1024 * 1024;
       const parallelUploads =
         parseInt(parallelUploadsInputRef.current?.value || "", 10) || 1;
 
       var mediaId = "";
 
       const options: tus.UploadOptions = {
-        endpoint: "/api/cloudflare",
-        // chunkSize: 50 * 1024 * 1024,
+        endpoint: endpoint,
+        chunkSize: chunkSize,
+        parallelUploads: parallelUploads,
         retryDelays: [0, 1000, 3000, 5000],
-        // parallelUploads: parallelUploads,
         metadata: {
-          expiry: "2024-03-27T04:45:19.634Z",
+          expiry: getExpiryDate(),
           filename: file.name,
           filetype: file.type,
         },
         onError: (error) => {
-          console.log(
-            "This is the famous error",
-            JSON.stringify(error.message)
-          );
+          console.log("This is the famous error", JSON.stringify(error));
           alert(`Failed because: ${error}`);
           reset();
         },
@@ -54,9 +58,6 @@ const UploadDemo: React.FC = () => {
         onSuccess: () => {
           console.log("Upload finished:", newUpload.url);
           alert(newUpload.url);
-          // var index = newUpload.url!.lastIndexOf("/") + 1;
-          // var mediaId = newUpload.url!.substr(index);
-          // console.log("Media id:", mediaId);
           reset();
         },
         onAfterResponse: function (req, res) {
@@ -145,7 +146,7 @@ const UploadDemo: React.FC = () => {
           type="text"
           id="endpoint"
           name="endpoint"
-          defaultValue="https://tusd.tusdemo.net/files/"
+          defaultValue="/api/cloudflare"
           className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
@@ -214,6 +215,7 @@ const UploadDemo: React.FC = () => {
       <h3 className="text-lg font-medium">Uploads</h3>
       <p id="upload-list" className="mt-2 text-sm text-gray-600">
         Successful uploads will be listed here. Try one!
+        {upload?.url}
       </p>
     </div>
   );
