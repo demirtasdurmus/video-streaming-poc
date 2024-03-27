@@ -1,0 +1,4 @@
+curl -X POST \
+-H "Authorization: Bearer <API Token>" \
+-F file=@/Users/durmusdemirtas/Desktop/docs/videos/test-43sn.mp4 \
+https://api.cloudflare.com/client/v4/accounts/<account_id>/stream
