@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     return new NextResponse(JSON.stringify({ message: "success" }), {
-      status: 200,
+      status: res.status,
       headers: {
         "Access-Control-Expose-Headers": "Location",
         "Access-Control-Allow-Headers": "*",

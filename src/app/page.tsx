@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <MediaPlayer
       title="Sprite Fight"
-      src="https://customer-zctsfptzopsskavs.cloudflarestream.com/e09ee2d4a8de4d34a2c840eb409883e6/manifest/video.m3u8"
+      src="https://customer-zctsfptzopsskavs.cloudflarestream.com/fa8bc576a080afbb9aab11f1329448fb/manifest/video.m3u8"
     >
       <MediaProvider />
       <DefaultVideoLayout

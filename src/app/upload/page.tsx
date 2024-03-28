@@ -15,7 +15,7 @@ const UploadDemo: React.FC = () => {
 
   const getExpiryDate = () => {
     let theDate = new Date();
-    theDate.setHours(theDate.getHours() + 5);
+    theDate.setHours(theDate.getHours() + 1);
     return theDate.toISOString();
   };
 
@@ -24,19 +24,17 @@ const UploadDemo: React.FC = () => {
       const file = fileInputRef.current.files[0];
       if (!file) return;
 
-      const endpoint = endpointInputRef.current?.value || "/api/cloudflare";
+      const endpoint =
+        endpointInputRef.current?.value || "http://tusd.tusdemo.net/files/";
 
-      const chunkSize = chunkSizeInputRef.current
-        ? parseInt(chunkSizeInputRef.current?.value || "", 10) || Infinity
-        : 50 * 1024 * 1024;
+      const chunkSize =
+        parseInt(chunkSizeInputRef.current?.value || "", 10) || Infinity;
 
       const parallelUploads =
         parseInt(parallelUploadsInputRef.current?.value || "", 10) || 1;
 
-      var mediaId = "";
-
       const options: tus.UploadOptions = {
-        endpoint: endpoint,
+        endpoint,
         chunkSize: chunkSize,
         parallelUploads: parallelUploads,
         retryDelays: [0, 1000, 3000, 5000],
@@ -58,24 +56,35 @@ const UploadDemo: React.FC = () => {
         //   const xhr = req.getUnderlyingObject();
         //   xhr.withCredentials = true;
         // },
-        onSuccess: () => {
-          console.log("Upload finished:", newUpload.url);
-          alert(newUpload.url);
-          reset();
-        },
-        onAfterResponse: function (req, res) {
-          return new Promise((resolve) => {
-            var mediaIdHeader = res.getHeader("stream-media-id");
-            if (mediaIdHeader) {
-              mediaId = mediaIdHeader;
-            }
-            console.log(mediaId);
-            resolve();
-          });
-        },
+        // onAfterResponse: function (req, res) {
+        //   return new Promise((resolve) => {
+        //     var mediaIdHeader = res.getHeader("stream-media-id");
+        //     if (mediaIdHeader) {
+        //       mediaId = mediaIdHeader;
+        //     }
+        //     console.log(mediaId);
+        //     resolve();
+        //   });
+        // },
         // onUploadUrlAvailable: function () {
         //   console.log("Upload url is available");
         // },
+        onShouldRetry: function (err, retryAttempt, options) {
+          console.log("Error", err);
+          console.log("Request", err.originalRequest);
+          console.log("Response", err.originalResponse);
+
+          var status = err.originalResponse
+            ? err.originalResponse.getStatus()
+            : 0;
+          // Do not retry if the status is a 403.
+          if (status === 403) {
+            return false;
+          }
+
+          // For any other status code, we retry.
+          return false;
+        },
       };
 
       const newUpload = new tus.Upload(file, options);
@@ -111,6 +120,18 @@ const UploadDemo: React.FC = () => {
       <h1 className="text-xl font-bold mb-4">
         tus-js-client demo - File Upload
       </h1>
+
+      {upload && (
+        <div className="w-full bg-blue-400 rounded-lg p-4 text-white relative overflow-hidden">
+          <p className="text-xs">{upload.url}</p>
+          <span
+            className="text-black top-2 right-2 absolute font-bold text-2xl cursor-pointer"
+            onClick={() => reset()}
+          >
+            X
+          </span>
+        </div>
+      )}
 
       {errorMessage && (
         <div className="w-full bg-red-400 rounded-lg p-4 text-white relative">
@@ -164,7 +185,7 @@ const UploadDemo: React.FC = () => {
           type="text"
           id="endpoint"
           name="endpoint"
-          defaultValue="/api/cloudflare"
+          defaultValue="http://tusd.tusdemo.net/files/"
           className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
